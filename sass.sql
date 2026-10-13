@@ -32,6 +32,9 @@ CREATE TABLE IF NOT EXISTS `sass`.`users` (
   `year` VARCHAR(45) NOT NULL,
   `contact` INT NOT NULL,
   `address` VARCHAR(45) NOT NULL,
+  `status` VARCHAR(45) NOT NULL DEFAULT 'approved',
+  `created_at` DATETIME NULL,
+  `verification_remark` TEXT NULL,
   `login_at` TIME NULL,
   `logout_at` TIME NULL,
   PRIMARY KEY (`id`))

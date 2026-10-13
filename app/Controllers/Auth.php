@@ -20,6 +20,7 @@ class Auth extends BaseController
         $password = $this->request->getPost('password');
         $usersModel = new UsersModel();
         $users = $usersModel
+        
             ->groupStart()
                 ->where('loginId', $loginId)
             ->groupEnd()
@@ -28,6 +29,18 @@ class Auth extends BaseController
             return redirect()
                 ->back()
                 ->with('error', 'No User Available.');
+        }
+        $status = strtolower(trim((string) ($users['status'] ?? '')));
+        if ($status !== 'approved') {
+            $message = match ($status) {
+                'pending' => 'Your account is waiting for faculty verification.',
+                'declined' => 'Your account verification was declined. Please contact the faculty.',
+                default => 'Your account has not been approved for sign-in.',
+            };
+
+            return redirect()
+                ->back()
+                ->with('error', $message);
         }
         session()->set([
             'id' => $users['id'],
@@ -87,7 +100,7 @@ class Auth extends BaseController
             $password,
             PASSWORD_DEFAULT
         );
-        $usersModel->insert([
+        $inserted = $usersModel->insert([
             'firstname'      => $firstname,
             'middlename'     => $middlename,
             'lastname'        => $lastname,
@@ -101,10 +114,23 @@ class Auth extends BaseController
             'password'  => $hashedPassword,
             'loginId'        => $loginId,
             'role'            => $role,
+            'status'          => 'pending',
+            'created_at'      => date('Y-m-d H:i:s'),
         ]);
+        if ($inserted === false) {
+            log_message('error', 'Unable to register user: {errors}', [
+                'errors' => json_encode($usersModel->errors()),
+            ]);
+
+            return redirect()
+                ->back()
+                ->withInput()
+                ->with('error', 'Unable to create your account. Please try again.');
+        }
+
         return redirect()
             ->to('/login')
-            ->with('success', 'Registration successful! You can now log in.');
+            ->with('success', 'Registration successful! Please wait for your user application to be verified.');
     }
     private function redirectBasedOnRole($role)
     {

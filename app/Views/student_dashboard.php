@@ -1,3 +1,13 @@
+<?php
+$userProfile = $userProfile ?? [];
+$profileName = $profileName ?? trim(implode(' ', array_filter([
+    $userProfile['firstname'] ?? '',
+    $userProfile['middlename'] ?? '',
+    $userProfile['lastname'] ?? '',
+])));
+$profileName = $profileName !== '' ? $profileName : ($userProfile['loginId'] ?? 'User');
+$profileDetails = $profileDetails ?? [];
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -189,6 +199,126 @@
                 font-size: 0.95rem !important;
             }
         }
+    
+
+        /* Compact notification dropdown */
+        .notification-dropdown {
+            width: min(340px, calc(100vw - 1.5rem));
+            padding: 0;
+            border: 0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: .65rem !important;
+        }
+        .notification-dropdown-title {
+            padding: .9rem 1rem;
+            font-weight: 700;
+            border-bottom: 1px solid #edf0f2;
+            background: #f8fbfc;
+        }
+        .notification-item {
+            display: flex;
+            align-items: center;
+            gap: .75rem;
+            padding: .85rem 1rem;
+            border-bottom: 1px solid #edf0f2;
+        }
+        .notification-item-icon {
+            width: 38px;
+            height: 38px;
+            flex: 0 0 38px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            background: #e7f1ff;
+            color: #0d6efd;
+            font-size: 1.1rem;
+        }
+        .notification-item:last-child { border-bottom: 0; }
+        .notification-item .btn { white-space: nowrap; }
+        @media (max-width: 480px) {
+            .notification-dropdown { position: fixed !important; top: 65px !important; right: .5rem !important; left: auto !important; }
+        }
+
+        /* Profile details dropdown */
+        .profile-dropdown {
+            width: min(460px, calc(100vw - 2rem));
+            white-space: normal;
+            border: 0;
+            border-radius: 14px;
+            overflow: hidden;
+            margin-top: .65rem !important;
+        }
+        .profile-dropdown-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1.15rem 1.25rem;
+            background: #eaf4f7;
+        }
+        .profile-avatar {
+            width: 58px;
+            height: 58px;
+            flex: 0 0 58px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            background: #cfe2ff;
+            color: #34556d;
+            font-size: 1.9rem;
+        }
+        .profile-name {
+            font-weight: 700;
+            font-size: 1rem;
+            overflow-wrap: anywhere;
+        }
+        .profile-email {
+            color: #6c757d;
+            font-size: .85rem;
+            overflow-wrap: anywhere;
+        }
+        .profile-details-title {
+            padding: 1rem 1.25rem .5rem;
+            font-weight: 700;
+            font-size: 1rem;
+        }
+        .profile-details-table {
+            padding: 0 1.25rem .75rem;
+        }
+        .profile-detail-row {
+            display: grid;
+            grid-template-columns: minmax(115px, .9fr) minmax(0, 1.1fr);
+            gap: .75rem;
+            padding: .55rem 0;
+            border-bottom: 1px solid #edf0f2;
+            font-size: .875rem;
+        }
+        .profile-detail-row:last-child { border-bottom: 0; }
+        .profile-detail-row span { color: #6c757d; }
+        .profile-detail-row strong {
+            font-weight: 600;
+            text-align: right;
+            overflow-wrap: anywhere;
+        }
+        .profile-dropdown-footer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: .5rem;
+            padding: .85rem 1.25rem 1rem;
+            background: #f8f9fa;
+            border-top: 1px solid #edf0f2;
+        }
+        .profile-full-table th { width: 35%; }
+        .profile-full-table td { overflow-wrap: anywhere; }
+        @media (max-width: 480px) {
+            .profile-dropdown { position: fixed !important; top: 65px !important; right: .5rem !important; left: auto !important; }
+            .profile-dropdown-footer { flex-direction: column; }
+            .profile-dropdown-footer .btn { width: 100%; }
+        }
+
     </style>
 </head>
 
@@ -206,23 +336,112 @@
             </span>
             <!-- Right Side Buttons -->
             <div class="ms-auto d-flex align-items-center gap-2">
-                <!-- Notification -->
-                <a href="<?= site_url('notifications') ?>"
-                    class="btn nav-icon-btn rounded-circle"
-                    title="Notifications"
-                    aria-label="Notifications">
-                    <i class="bi bi-bell"></i>
-                </a>
-                <!-- Profile -->
-                <a href="<?= site_url('profile') ?>"
-                    class="btn nav-icon-btn rounded-circle"
-                    title="Profile"
-                    aria-label="Profile">
-                    <i class="bi bi-person-circle"></i>
-                </a>
+                <!-- Student notifications dropdown -->
+                <div class="dropdown">
+                    <button type="button" class="btn nav-icon-btn rounded-circle position-relative"
+                            id="studentNotificationsDropdown" data-bs-toggle="dropdown"
+                            aria-expanded="false" title="Notifications" aria-label="Notifications">
+                        <i class="bi bi-bell"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end notification-dropdown shadow"
+                        aria-labelledby="studentNotificationsDropdown">
+                        <div class="notification-dropdown-title d-flex justify-content-between align-items-center">
+                            <span>Notifications</span><span class="badge bg-primary">Updates</span>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-item-icon"><i class="bi bi-file-earmark-check"></i></div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold small">Submission Update</div>
+                                <div class="text-muted small">Check the status of your documents.</div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                    data-bs-dismiss="dropdown" onclick="openSubmissionUpdates()">View</button>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-item-icon"><i class="bi bi-megaphone"></i></div>
+                            <div class="flex-grow-1">
+                                <div class="fw-semibold small">Announcements</div>
+                                <div class="text-muted small">Announcement updates are not connected yet.</div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" onclick="showAnnouncementsNotice()">View</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Profile details dropdown -->
+                <div class="dropdown">
+                    <button
+                        type="button"
+                        class="btn nav-icon-btn rounded-circle"
+                        id="studentProfileDropdown"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        title="View profile details"
+                        aria-label="View profile details">
+                        <i class="bi bi-person-circle"></i>
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-end profile-dropdown p-0 shadow"
+                        aria-labelledby="studentProfileDropdown">
+                        <div class="profile-dropdown-header">
+                            <div class="profile-avatar"><i class="bi bi-person-fill"></i></div>
+                            <div class="min-w-0">
+                                <div class="profile-name">
+                                    <?= esc($profileName) ?>
+                                </div>
+                                <div class="profile-email">
+                                    <?= esc($userProfile['email'] ?? 'Email not available') ?>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="profile-details-title">Account Summary</div>
+                        <div class="profile-details-table">
+                            <div class="profile-detail-row"><span>Login ID</span><strong><?= esc($userProfile['loginId'] ?? 'Not provided') ?></strong></div>
+                            <div class="profile-detail-row"><span>Program</span><strong><?= esc($userProfile['program'] ?? 'Not provided') ?></strong></div>
+                            <div class="profile-detail-row"><span>Year Level</span><strong><?= esc($userProfile['year'] ?? 'Not provided') ?></strong></div>
+                        </div>
+                        <div class="profile-dropdown-footer">
+                            <button type="button" class="btn btn-sm btn-outline-primary"
+                                    data-bs-toggle="modal" data-bs-target="#userProfileModal">
+                                <i class="bi bi-person-lines-fill me-1"></i> View Full Information
+                            </button>
+                            <a href="<?= site_url('logout') ?>" class="btn btn-sm btn-outline-danger">
+                                <i class="bi bi-box-arrow-right me-1"></i> Log Out
+                            </a>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </header>
+    <div class="modal fade" id="userProfileModal" tabindex="-1" aria-labelledby="userProfileModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div>
+                        <h5 class="modal-title" id="userProfileModalLabel">Full User Information</h5>
+                        <div class="text-muted small"><?= esc($profileName) ?></div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped align-middle profile-full-table mb-0">
+                            <tbody>
+                            <?php foreach ($profileDetails as $detail): ?>
+                                <tr>
+                                    <th scope="row"><?= esc($detail['label']) ?></th>
+                                    <td><?= esc((string) $detail['value'] !== '' ? $detail['value'] : 'Not provided') ?></td>
+                                </tr>
+                            <?php endforeach; ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- =========================
         MAIN CONTENT
     ========================== -->
@@ -404,6 +623,13 @@
 <!-- Bootstrap 5 JavaScript -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+    function openSubmissionUpdates() {
+        showStatusSection();
+    }
+
+    function showAnnouncementsNotice() {
+        alert('Announcements are not connected yet. This button can be linked when the announcement feature is implemented.');
+    }
     /*
     ============================================================
         SHOW UPLOAD REQUIREMENTS
@@ -416,6 +642,18 @@
             document.getElementById('documentStatusBtn');
         const section =
             document.getElementById('sectionContent');
+        const requirements = [
+            'DSWD Certificate',
+            'SAP Form 1',
+            'SAP Form 2',
+            '2pc. 1x1 ID Picture',
+            'Photocopy of School ID Back to Back',
+            'Photocopy of School Enrollment',
+            'Grades from 1st Year to Current Year',
+            'SAP Form 3',
+            'Medical Certificate'
+        ];
+
         uploadButton.disabled = true;
         statusButton.disabled = false;
         section.innerHTML = `
@@ -434,117 +672,34 @@
                     </div>
                 </div>
                 <div class="row g-3">
-
-                    <!-- APPLICATION FORM -->
-                    <div class="col-12 col-lg-6">
-                        <div class="upload-option">
-                            <form
-                                onsubmit="uploadFile(event, 'Application Form', 'applicationFile')"
-                            >
-                                <div class="d-flex align-items-center">
-                                    <div class="upload-option-icon me-3">
-                                        <i class="bi bi-file-earmark-text"></i>
+                    ${requirements.map((requirement, index) => `
+                        <div class="col-12 col-lg-6">
+                            <div class="upload-option">
+                                <form onsubmit='uploadFile(event, ${JSON.stringify(requirement)}, "requirementFile${index}")'>
+                                    <div class="d-flex align-items-center">
+                                        <div class="upload-option-icon me-3">
+                                            <i class="bi bi-file-earmark-pdf"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">${requirement}</h6>
+                                            <small class="text-muted">Upload a PDF file.</small>
+                                            <input
+                                                type="file"
+                                                id="requirementFile${index}"
+                                                class="form-control form-control-sm mt-2"
+                                                accept=".pdf,application/pdf"
+                                                required
+                                            >
+                                        </div>
                                     </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1">
-                                            Application Form
-                                        </h6>
-                                        <small class="text-muted">
-                                            Upload your application form.
-                                        </small>
-                                        <input
-                                            type="file"
-                                            id="applicationFile"
-                                            class="form-control form-control-sm mt-2"
-                                            accept=".pdf,.doc,.docx"
-                                            required
-                                        >
-                                    </div>
-                                </div>
-                                <button
-                                    type="submit"
-                                    class="btn btn-primary btn-sm mt-3"
-                                >
-                                    <i class="bi bi-upload me-1"></i>
-                                    Submit
-                                </button>
-                            </form>
+                                    <button type="submit" class="btn btn-primary btn-sm mt-3">
+                                        <i class="bi bi-upload me-1"></i>
+                                        Submit
+                                    </button>
+                                </form>
+                            </div>
                         </div>
-                    </div>
-
-                    <!-- SUPPORTING DOCUMENT -->
-                    <div class="col-12 col-lg-6">
-                        <div class="upload-option">
-                            <form
-                                onsubmit="uploadFile(event, 'Supporting Document', 'supportingFile')"
-                            >
-                                <div class="d-flex align-items-center">
-                                    <div class="upload-option-icon me-3">
-                                        <i class="bi bi-file-earmark-pdf"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1">
-                                            Supporting Document
-                                        </h6>
-                                        <small class="text-muted">
-                                            Upload your supporting document.
-                                        </small>
-                                        <input
-                                            type="file"
-                                            id="supportingFile"
-                                            class="form-control form-control-sm mt-2"
-                                            accept=".pdf,.doc,.docx"
-                                            required
-                                        >
-                                    </div>
-                                </div>
-                                <button
-                                    type="submit"
-                                    class="btn btn-primary btn-sm mt-3"
-                                >
-                                    <i class="bi bi-upload me-1"></i>
-                                    Submit
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
-                    <!-- IDENTIFICATION DOCUMENT -->
-                    <div class="col-12 col-lg-6">
-                        <div class="upload-option">
-                            <form
-                                onsubmit="uploadFile(event, 'Identification Document', 'identificationFile')"
-                            >
-                                <div class="d-flex align-items-center">
-                                    <div class="upload-option-icon me-3">
-                                        <i class="bi bi-person-vcard"></i>
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <h6 class="mb-1">
-                                            Identification Document
-                                        </h6>
-                                        <small class="text-muted">
-                                            Upload a valid identification document.
-                                        </small>
-                                        <input
-                                            type="file"
-                                            id="identificationFile"
-                                            class="form-control form-control-sm mt-2"
-                                            accept=".pdf,.jpg,.jpeg,.png"
-                                            required
-                                        >
-                                    </div>
-                                </div>
-                                <button
-                                    type="submit"
-                                    class="btn btn-primary btn-sm mt-3"
-                                >
-                                    <i class="bi bi-upload me-1"></i>
-                                    Submit
-                                </button>
-                            </form>
-                        </div>
-                    </div>
+                    `).join('')}
                 </div>
             </div>
         `;

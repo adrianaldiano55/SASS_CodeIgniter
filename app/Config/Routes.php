@@ -26,8 +26,16 @@ $routes->get(
     ['filter' => 'auth:student']
 );
 
+// STUDENT FUNCTIONS
 $routes->get('documents/status', 'Documents::status', ['filter' => 'auth:student']);
 $routes->post('documents', 'Documents::create_File', ['filter' => 'auth:student']);
 $routes->get('documents/(:num)/view', 'Documents::view_File/$1', ['filter' => 'auth:student']);
 $routes->post('documents/(:num)/update', 'Documents::update_File/$1', ['filter' => 'auth:student']);
 $routes->post('documents/(:num)/delete', 'Documents::delete_File/$1', ['filter' => 'auth:student']);
+
+// FACULTY FUNCTIONS
+$routes->get('faculty/verifications', 'Faculty::verifications', ['filter' => 'auth:faculty']);
+$routes->get('faculty/verifications/(:num)', 'Faculty::verification/$1', ['filter' => 'auth:faculty']);
+$routes->post('faculty/verifications/(:num)/review', 'Faculty::reviewVerification/$1', ['filter' => 'auth:faculty']);
+$routes->get('faculty/pending-counts', 'Faculty::pendingCounts', ['filter' => 'auth:faculty']);
+$routes->get('documents/requirements', 'Documents:requirements', ['filter' => 'auth:faculty']);

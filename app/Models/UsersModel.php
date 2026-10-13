@@ -24,6 +24,9 @@ class UsersModel extends Model
         'year',
         'contact',
         'address',
+        'status',
+        'created_at',
+        'verification_remark',
         'login_at',
         'logout_at',
     ];
